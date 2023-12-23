@@ -9,6 +9,17 @@ struct Args {
     filepath: String,
 }
 
+struct Game {
+    id: u32,
+    sets: Vec<Set>
+}
+
+struct Set {
+    red: u32,
+    green: u32,
+    blue: u32
+}
+
 const MAX_RED: u32 = 12;
 const MAX_GREEN: u32 = 13;
 const MAX_BLUE: u32 = 14;
@@ -27,10 +38,9 @@ fn part_one(contents: &str) -> u32 {
         .map(|game| {
             let game_md = game.split_once(":").unwrap();
             let game_id = game_md.0.replace("Game ", "");
-            println!("Game ID: {game_id}");
-            let game_txt = game_md.1;
-            if is_game_possible(game_txt) {
-                game_id.parse::<u32>().unwrap()
+            let game = Game{id: game_id.parse::<u32>().unwrap(), sets: parse_sets(game_md.1)};
+            if is_game_possible(&game) {
+                game.id.to_owned()
             } else {
                 0
             }
@@ -39,11 +49,10 @@ fn part_one(contents: &str) -> u32 {
     total
 }
 
-fn is_game_possible(game: &str) -> bool {
-    println!("Game: {game}");
-    let hands = game.split(";");
-    for hand in hands {
-        println!("hand: {hand}");
+fn parse_sets(game_txt: &str) -> Vec<Set> {
+    let mut sets: Vec<Set> = Vec::new();
+    let hands = game_txt.split(";");
+    for hand in hands{
         let draws = hand.trim().split(",");
         for draw in draws {
             let tuple = draw.trim().split_once(" ").unwrap();
@@ -61,10 +70,16 @@ fn is_game_possible(game: &str) -> bool {
             } else {
                 unimplemented!();
             }
+            sets.push(Set{red, green, blue});
+        }
+    }
+    sets
+}
 
-            if green > MAX_GREEN || red > MAX_RED || blue > MAX_BLUE {
-                return false;
-            }
+fn is_game_possible(game: &Game) -> bool {
+    for set in &game.sets {
+        if set.green > MAX_GREEN || set.red > MAX_RED || set.blue > MAX_BLUE {
+            return false;
         }
     }
     return true;
@@ -74,7 +89,7 @@ fn is_game_possible(game: &str) -> bool {
 mod tests {
     use rstest::rstest;
 
-    use crate::{is_game_possible, part_one};
+    use crate::{Game, is_game_possible, parse_sets, part_one};
 
     #[rstest]
     #[case("3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green", true)]
@@ -88,8 +103,9 @@ mod tests {
         false
     )]
     #[case("6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green", true)]
-    fn test_lines(#[case] line: &str, #[case] expected: bool) {
-        assert_eq!(expected, is_game_possible(line))
+    fn test_lines(#[case] game_txt: &str, #[case] expected: bool) {
+        let game = Game{id: 0, sets:parse_sets(game_txt)};
+        assert_eq!(expected, is_game_possible(&game))
     }
 
     #[test]
