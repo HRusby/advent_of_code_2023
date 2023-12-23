@@ -10,7 +10,6 @@ struct Args {
 }
 
 struct Game {
-    id: u32,
     sets: Vec<Set>
 }
 struct Set {
@@ -18,10 +17,6 @@ struct Set {
     green: u32,
     blue: u32
 }
-
-const MAX_RED: u32 = 12;
-const MAX_GREEN: u32 = 13;
-const MAX_BLUE: u32 = 14;
 
 fn main() {
     let args = Args::parse();
@@ -36,9 +31,8 @@ fn part_two(contents: &str) -> u32 {
         .lines()
         .map(|game| {
             let game_md = game.split_once(":").unwrap();
-            let game_id = game_md.0.replace("Game ", "");
             let game_sets = parse_sets(game_md.1);
-            let game = Game{id:game_id.parse::<u32>().unwrap(), sets:game_sets};
+            let game = Game{sets:game_sets};
             get_game_power(game)
         })
         .sum();
@@ -76,7 +70,21 @@ fn get_game_power(game: Game) -> u32{
     /*
     * For each Game, get maximum of each colour across all hands, multiple together and return
     */
-    todo!()
+    let mut max_green = 0;
+    let mut max_red = 0;
+    let mut max_blue = 0;
+    for set in game.sets{
+        if set.green > max_green {
+            max_green = set.green;
+        }
+        if set.red > max_red {
+            max_red = set.red;
+        }
+        if set.blue > max_blue {
+            max_blue = set.blue;
+        }
+    }
+    max_green * max_red * max_blue
 }
 
 #[cfg(test)]
@@ -98,7 +106,7 @@ mod tests {
     )]
     #[case("6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green", 36)]
     fn test_lines(#[case] game_txt: &str, #[case] expected: u32) {
-        let game = Game{id:0, sets:parse_sets(game_txt)};
+        let game = Game{sets:parse_sets(game_txt)};
         assert_eq!(expected, get_game_power(game))
     }
 
